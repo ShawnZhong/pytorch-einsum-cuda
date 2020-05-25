@@ -1,11 +1,17 @@
 // Returns the frequency of elements of input non-negative integer tensor.
+#include <ATen/native/SummaryOps.h>
 
 #include <ATen/ATen.h>
 #include <ATen/Dispatch.h>
+#include <ATen/Parallel.h>
+#include <ATen/native/TensorIterator.h>
+#include <ATen/native/DispatchStub.h>
 
 #include <tuple>
 
 namespace at { namespace native {
+
+DEFINE_DISPATCH(histc_stub);
 
 ///////////////// bincount /////////////////
 namespace {
@@ -63,6 +69,26 @@ _bincount_cpu(const Tensor& self, const Tensor& weights, int64_t minlength) {
     return _bincount_cpu_template<scalar_t, double>(
         self.contiguous(), weights.contiguous().to(kDouble), minlength);
   });
+}
+
+Tensor& histc_out(Tensor& hist, const Tensor &self, int64_t nbins, Scalar minvalue, Scalar maxvalue) {
+  TORCH_CHECK(nbins > 0, "histc: bins must be > 0");
+  TORCH_CHECK(at::isIntegralType(hist.scalar_type()), "hist only supports integral-point dtypes, hist got: ", hist.scalar_type());
+
+  hist.resize_({nbins});
+  hist.zero_();
+
+  auto iter = at::TensorIterator();
+  iter.add_input(self);
+  iter.build();
+  histc_stub(iter.device_type(), iter, hist, nbins, minvalue, maxvalue);
+  return hist;
+}
+
+Tensor histc(const Tensor& self, int64_t nbins, Scalar minvalue, Scalar maxvalue) {
+  Tensor hist = at::empty({0}, self.options().dtype(kLong));
+  at::histc_out(hist, self, nbins, minvalue, maxvalue);
+  return hist;
 }
 
 }} // namespace at::native
