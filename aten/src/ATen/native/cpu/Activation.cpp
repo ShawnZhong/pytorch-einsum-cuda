@@ -56,7 +56,7 @@ static void log_sigmoid_cpu_kernel(Tensor& output, Tensor& buffer, const Tensor&
   });
 }
 
-static void log_sigmoid_backward_cpu_kernel(TensorIterator& iter) {
+static void log_sigmoid_backward_kernel(TensorIterator& iter) {
   AT_DISPATCH_FLOATING_TYPES(iter.dtype(), "log_sigmoid_backward_cpu", [&]() {
     using Vec = Vec256<scalar_t>;
     auto zero_val = scalar_t(0);
@@ -592,7 +592,7 @@ void glu_backward_kernel(TensorIterator& iter) {
 } // namespace
 
 REGISTER_DISPATCH(log_sigmoid_cpu_stub, &log_sigmoid_cpu_kernel);
-REGISTER_DISPATCH(log_sigmoid_backward_cpu_stub, &log_sigmoid_backward_cpu_kernel);
+REGISTER_DISPATCH(log_sigmoid_backward_stub, &log_sigmoid_backward_kernel);
 REGISTER_DISPATCH(threshold_stub, &threshold_kernel);
 REGISTER_DISPATCH(elu_stub, &elu_kernel);
 REGISTER_DISPATCH(elu_backward_stub, &elu_backward_kernel);

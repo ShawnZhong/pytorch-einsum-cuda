@@ -18,7 +18,7 @@ DEFINE_DISPATCH(elu_backward_stub);
 DEFINE_DISPATCH(softplus_stub);
 DEFINE_DISPATCH(softplus_backward_stub);
 DEFINE_DISPATCH(log_sigmoid_cpu_stub);
-DEFINE_DISPATCH(log_sigmoid_backward_cpu_stub);
+DEFINE_DISPATCH(log_sigmoid_backward_stub);
 DEFINE_DISPATCH(threshold_stub);
 DEFINE_DISPATCH(hardtanh_backward_stub);
 DEFINE_DISPATCH(hardsigmoid_stub);
@@ -754,7 +754,7 @@ Tensor log_sigmoid(const Tensor & self) {
   return std::get<0>(at::log_sigmoid_forward(self));
 }
 
-Tensor log_sigmoid_backward_cpu(const Tensor& grad_output, const Tensor& input, const Tensor& buffer) {
+Tensor log_sigmoid_backward(const Tensor& grad_output, const Tensor& input, const Tensor& buffer) {
   Tensor grad_input;
   auto iter = at::TensorIterator();
   iter.set_check_mem_overlap(true);
@@ -763,11 +763,11 @@ Tensor log_sigmoid_backward_cpu(const Tensor& grad_output, const Tensor& input, 
   iter.add_input(buffer);
   iter.add_input(grad_output);
   iter.build();
-  log_sigmoid_backward_cpu_stub(kCPU, iter);
+  log_sigmoid_backward_stub(iter.device_type(), iter);
   return iter.output();
 }
 
-Tensor& log_sigmoid_backward_out_cpu(
+Tensor& log_sigmoid_backward_out(
     Tensor& grad_input,
     const Tensor& grad_output,
     const Tensor& input,
@@ -779,7 +779,7 @@ Tensor& log_sigmoid_backward_out_cpu(
   iter.add_input(buffer);
   iter.add_input(grad_output);
   iter.build();
-  log_sigmoid_backward_cpu_stub(kCPU, iter);
+  log_sigmoid_backward_stub(iter.device_type(), iter);
   return grad_input;
 }
 
